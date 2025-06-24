@@ -81,7 +81,7 @@ def index():
                                    species=species,
                                    habitat=habitat,
                                    confidence=confidence_percent,
-                                   timestamp=datetime.now().timestamp(),  # ⬅️ Tambahkan timestamp
+                                   timestamp=datetime.now().timestamp(),  
                                    species_list=species_list,
                                    habitat_list=habitat_list)
 

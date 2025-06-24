@@ -61,7 +61,6 @@ Classification-of-Fish-Species-and-Habitat/
 ```
 
 ---
-
 ## How It Works
 
 - Image is uploaded and preprocessed to size (224x224).
@@ -72,13 +71,10 @@ Classification-of-Fish-Species-and-Habitat/
 
 ---
 
-## License
+## Dataset
 
-This project is for educational purposes. Please contact the author if you intend to use it commercially or modify it for public deployment.
+**Source:** [Fish Dataset on Kaggle](https://www.kaggle.com/datasets/markdaniellampa/fish-dataset)
+
+**Description:** This dataset contains thousands of labeled images of **31 fish species**, including both freshwater and saltwater fish, captured under various lighting conditions and angles. It was used to train the classification model.
 
 ---
-
-## Author
-
-Developed by **MFH**  
-Feel free to fork, contribute, and improve!

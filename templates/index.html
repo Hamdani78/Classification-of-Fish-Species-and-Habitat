@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Klasifikasi Spesies Ikan</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <div class="navbar">Website Klasifikasi Spesies dan Habitat Ikan</div>
+
+    <div class="main-layout">
+        <div class="info-section">
+            <h2>Informasi Spesies dan Habitat Ikan</h2>
+            <p>Daftar spesies ikan dan habitatnya:</p>
+            <div class="species-columns">
+                <div class="column">
+                    {% for i in range(1, 17) %}
+                    <div class="fish-item">
+                        <strong>{{ i }}. {{ species_list[i-1] }}</strong><br>
+                        Habitat: {{ habitat_list[i-1] }}
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="column">
+                    {% for i in range(17, 32) %}
+                    <div class="fish-item">
+                        <strong>{{ i }}. {{ species_list[i-1] }}</strong><br>
+                        Habitat: {{ habitat_list[i-1] }}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="interactive-card">
+            <h2>Prediksi Ikan</h2>
+            <p class="subheading">Unggah gambar ikan atau gunakan kamera Anda untuk mendeteksi spesies dan habitatnya.</p>
+
+            <form method="POST" enctype="multipart/form-data">
+                <input type="file" name="image" accept="image/*" onchange="previewImage(event)" required>
+                <button type="submit">Prediksi</button>
+            </form>
+
+            <div id="preview-section" style="display: none;">
+                <h3>Pratinjau Gambar:</h3>
+                <img id="preview" src="#" alt="Preview" />
+            </div>
+
+            <div class="webcam-section">
+                <h3>Atau Ambil dari Kamera</h3>
+                <video id="video" autoplay playsinline style="display: none;"></video>
+                <div class="webcam-buttons">
+                    <button type="button" onclick="toggleCamera()">Aktifkan Kamera</button>
+                    <button type="button" onclick="capture()" id="captureBtn" disabled>Ambil Foto</button>
+                </div>
+                <canvas id="canvas" style="display: none;"></canvas>
+            </div>
+
+            {% if prediction %}
+            <div class="result-box">
+                <p><strong>Hasil Prediksi:</strong></p>
+                {% if filename %}
+                <img src="{{ url_for('static', filename='upload/' + filename) }}?t={{ timestamp }}" alt="Prediction Image">
+                {% endif %}
+                <p><strong>Spesies:</strong> {{ species }}</p>
+                <p><strong>Habitat:</strong> {{ habitat }}</p>
+                <p><strong>Tingkat Kepercayaannya:</strong> {{ confidence }}%</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        let stream = null;
+        let video = null;
+        let canvas = null;
+        let captureBtn = null;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            video = document.getElementById('video');
+            canvas = document.getElementById('canvas');
+            captureBtn = document.getElementById('captureBtn');
+        });
+
+        function previewImage(event) {
+            const reader = new FileReader();
+            reader.onload = function () {
+                const output = document.getElementById('preview');
+                output.src = reader.result;
+                document.getElementById('preview-section').style.display = 'block';
+            };
+            reader.readAsDataURL(event.target.files[0]);
+        }
+
+        async function toggleCamera() {
+            if (!stream) {
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    video.srcObject = stream;
+                    video.style.display = 'block';
+                    captureBtn.disabled = false;
+                } catch (error) {
+                    alert("Tidak dapat mengakses kamera: " + error.message);
+                }
+            } else {
+                stopCamera();
+            }
+        }
+
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+                video.srcObject = null;
+                video.style.display = 'none';
+                captureBtn.disabled = true;
+            }
+        }
+
+        function capture() {
+            if (!stream) return;
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            stopCamera();
+
+            canvas.toBlob((blob) => {
+                const formData = new FormData();
+                formData.append('image', blob, 'webcam_capture.png');
+
+                fetch("/", {
+                    method: "POST",
+                    body: formData
+                })
+                .then(response => response.text())
+                .then(html => {
+                    document.body.innerHTML = new DOMParser().parseFromString(html, 'text/html').body.innerHTML;
+                    reinitializeCameraControls(); // agar bisa digunakan lagi
+                });
+            }, 'image/png');
+        }
+
+        function reinitializeCameraControls() {
+            // Re-bind ulang elemen
+            video = document.getElementById('video');
+            canvas = document.getElementById('canvas');
+            captureBtn = document.getElementById('captureBtn');
+
+            document.querySelector("button[onclick='toggleCamera()']").onclick = toggleCamera;
+            document.querySelector("button[onclick='capture()']").onclick = capture;
+        }
+    </script>
+</body>
+</html>

@@ -1,14 +1,10 @@
-# Gunakan image Python resmi
-FROM python:3.11-slim
+FROM python:3.10-slim
 
-# Set direktori kerja
 WORKDIR /app
 
-# Copy semua file ke container
+COPY requirements.txt requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
 COPY . .
 
-# Install dependencies
-RUN pip install --upgrade pip && pip install -r requirements.txt
-
-# Jalankan aplikasi
 CMD ["python", "app.py"]
